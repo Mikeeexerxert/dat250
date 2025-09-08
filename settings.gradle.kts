@@ -1,1 +1,1 @@
-rootProject.name = "dat250"
+rootProject.name = "dat250-frontend"
