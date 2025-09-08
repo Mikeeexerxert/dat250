@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@Table(name = "poll")
 public class Poll {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

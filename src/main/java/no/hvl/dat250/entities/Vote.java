@@ -12,6 +12,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @ToString
+@Table(name = "vote")
 public class Vote {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

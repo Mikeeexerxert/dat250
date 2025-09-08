@@ -14,6 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@Table(name = "vote_option")
 public class VoteOption {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

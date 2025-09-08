@@ -9,5 +9,4 @@ class Dat250ApplicationTests {
     @Test
     void contextLoads() {
     }
-
 }
