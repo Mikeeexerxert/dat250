@@ -37,9 +37,9 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      # 5. Build the project (compile + tests)
-      - name: Build project
-        run: /gradlew clean build --refresh-dependencies --no-daemon
+      # 5. Run all tests
+      - name: Run all unit tests
+        run: ./gradlew clean test
 
       # 6. Publish test results to GitHub UI
       - name: Publish unit test results
