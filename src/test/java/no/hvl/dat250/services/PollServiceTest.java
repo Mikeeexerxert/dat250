@@ -33,7 +33,8 @@ class PollServiceTest {
         pollRepo = mock(PollRepository.class);
         optionRepo = mock(VoteOptionRepository.class);
         voteRepo = mock(VoteRepository.class);
-        pollService = new PollService(userRepo, pollRepo, optionRepo, voteRepo);
+        PollCacheService pollCacheService = mock(PollCacheService.class);
+        pollService = new PollService(userRepo, pollRepo, optionRepo, voteRepo, pollCacheService);
     }
 
     @Test

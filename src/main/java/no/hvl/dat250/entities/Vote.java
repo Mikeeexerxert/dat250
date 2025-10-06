@@ -4,26 +4,32 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serializable;
 import java.time.Instant;
 
-// Vote
 @Entity
 @Getter
 @Setter
 @ToString
+@RedisHash("Vote")
 @Table(name = "vote")
-public class Vote {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Vote implements Serializable {
+
+    @jakarta.persistence.Id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Instant publishedAt;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User voter;
+    private transient User voter;
 
     @ManyToOne
     @JoinColumn(name = "option_id")
-    private VoteOption option;
+    private transient VoteOption option;
 }

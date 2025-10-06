@@ -5,18 +5,24 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-// VoteOption
 @Entity
 @Getter
 @Setter
 @ToString
+@RedisHash("VoteOption")
 @Table(name = "vote_option")
-public class VoteOption {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class VoteOption implements Serializable {
+
+    @jakarta.persistence.Id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String caption;
@@ -25,9 +31,8 @@ public class VoteOption {
     @ManyToOne
     @JoinColumn(name = "poll_id")
     @JsonBackReference
-    private Poll poll;
+    private transient Poll poll;
 
-    // Votes linked to this option
     @OneToMany(mappedBy = "option", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Vote> votes = new ArrayList<>();
+    private transient List<Vote> votes = new ArrayList<>();
 }

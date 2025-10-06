@@ -22,15 +22,21 @@ public class PollService {
     private final PollRepository pollRepo;
     private final VoteOptionRepository optionRepo;
     private final VoteRepository voteRepo;
+    private final PollCacheService cacheService;
 
-    public PollService(UserRepository userRepo, PollRepository pollRepo, VoteOptionRepository optionRepo, VoteRepository voteRepo) {
+    public PollService(UserRepository userRepo,
+                       PollRepository pollRepo,
+                       VoteOptionRepository optionRepo,
+                       VoteRepository voteRepo,
+                       PollCacheService cacheService) {
         this.userRepo = userRepo;
         this.pollRepo = pollRepo;
         this.optionRepo = optionRepo;
         this.voteRepo = voteRepo;
+        this.cacheService = cacheService;
     }
 
-    // Poll CRUD
+    // --- Poll CRUD ---
 
     public List<Poll> getAllPolls() {
         return pollRepo.findAll();
@@ -52,17 +58,20 @@ public class PollService {
             existing.setQuestion(updated.getQuestion());
             existing.setPublishedAt(updated.getPublishedAt());
             existing.setValidUntil(updated.getValidUntil());
-            return pollRepo.save(existing);
+            Poll saved = pollRepo.save(existing);
+            cacheService.invalidate(id); // invalidate cache on update
+            return saved;
         });
     }
 
     public boolean deletePoll(Long id) {
         if (!pollRepo.existsById(id)) return false;
         pollRepo.deleteById(id);
+        cacheService.invalidate(id); // invalidate cache on deletion
         return true;
     }
 
-    // VoteOption CRUD
+    // --- VoteOption CRUD ---
 
     public Optional<VoteOption> getOption(Long optionId) {
         return optionRepo.findById(optionId);
@@ -71,7 +80,9 @@ public class PollService {
     public Optional<VoteOption> addOption(Long pollId, VoteOption option) {
         return pollRepo.findById(pollId).map(poll -> {
             option.setPoll(poll);
-            return optionRepo.save(option);
+            VoteOption saved = optionRepo.save(option);
+            cacheService.invalidate(pollId); // invalidate poll cache
+            return saved;
         });
     }
 
@@ -79,34 +90,50 @@ public class PollService {
         return optionRepo.findById(optionId).map(existing -> {
             existing.setCaption(updated.getCaption());
             existing.setPresentationOrder(updated.getPresentationOrder());
-            return optionRepo.save(existing);
+            VoteOption saved = optionRepo.save(existing);
+            cacheService.invalidate(existing.getPoll().getId()); // invalidate poll cache
+            return saved;
         });
     }
 
     public boolean deleteOption(Long optionId) {
-        if (!optionRepo.existsById(optionId)) return false;
+        Optional<VoteOption> optionOpt = optionRepo.findById(optionId);
+        if (optionOpt.isEmpty()) return false;
+        VoteOption option = optionOpt.get();
+        Long pollId = option.getPoll().getId();
         optionRepo.deleteById(optionId);
+        cacheService.invalidate(pollId); // invalidate poll cache
         return true;
     }
 
-    // Vote operations
+    // --- Vote operations ---
 
     public Optional<Vote> castVote(Long userId, Long optionId) {
         Optional<User> userOpt = userRepo.findById(userId);
         Optional<VoteOption> optionOpt = optionRepo.findById(optionId);
+
         if (userOpt.isPresent() && optionOpt.isPresent()) {
             VoteOption option = optionOpt.get();
             Poll poll = option.getPoll();
+
             // reject if poll expired
             if (poll.getValidUntil() != null && poll.getValidUntil().isBefore(Instant.now())) {
                 return Optional.empty();
             }
+
             Vote vote = new Vote();
             vote.setVoter(userOpt.get());
             vote.setOption(option);
             vote.setPublishedAt(Instant.now());
-            return Optional.of(voteRepo.save(vote));
+
+            Vote saved = voteRepo.save(vote);
+
+            // invalidate cache for this poll
+            cacheService.invalidate(poll.getId());
+
+            return Optional.of(saved);
         }
+
         return Optional.empty();
     }
 
@@ -118,14 +145,21 @@ public class PollService {
                 .orElse(List.of());
     }
 
-    // Poll results
+    // --- Poll results with caching ---
 
     public List<PollResult> getPollResults(Long pollId) {
-        return pollRepo.findById(pollId).map(poll ->
-                poll.getOptions().stream()
+        if (cacheService.isCached(pollId)) {
+            return cacheService.getCachedResults(pollId);
+        }
+
+        List<PollResult> results = pollRepo.findById(pollId)
+                .map(poll -> poll.getOptions().stream()
                         .map(option -> new PollResult(option.getCaption(),
                                 (long) option.getVotes().size()))
-                        .toList()
-        ).orElse(List.of());
+                        .toList())
+                .orElse(List.of());
+
+        cacheService.cacheResults(pollId, results);
+        return results;
     }
 }

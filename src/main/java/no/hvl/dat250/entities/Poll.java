@@ -6,22 +6,29 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
-
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-// Poll
 @Entity
 @Getter
 @Setter
 @ToString
+@RedisHash("Poll")
 @Table(name = "poll")
-public class Poll {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Poll implements Serializable {
+
+    @jakarta.persistence.Id
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Indexed
     private String question;
     private Instant publishedAt;
     private Instant validUntil;
@@ -29,10 +36,9 @@ public class Poll {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
-    private User createdBy;
+    private transient User createdBy;
 
-    // A poll has many options
     @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<VoteOption> options = new ArrayList<>();
+    private transient List<VoteOption> options = new ArrayList<>();
 }

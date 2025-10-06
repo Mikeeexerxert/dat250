@@ -22,10 +22,13 @@ dependencies {
     // Spring Boot starters
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     // implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // Database
     implementation("com.h2database:h2")
+    implementation("redis.clients:jedis")
+
     // runtimeOnly("org.postgresql:postgresql")
 
     // OpenAPI / Swagger
