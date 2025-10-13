@@ -11,6 +11,9 @@ import no.hvl.dat250.repositories.VoteOptionRepository;
 import no.hvl.dat250.repositories.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
 import java.time.Instant;
 import java.util.List;
@@ -34,7 +37,10 @@ class PollServiceTest {
         optionRepo = mock(VoteOptionRepository.class);
         voteRepo = mock(VoteRepository.class);
         PollCacheService pollCacheService = mock(PollCacheService.class);
-        pollService = new PollService(userRepo, pollRepo, optionRepo, voteRepo, pollCacheService);
+        AmqpAdmin amqpAdmin = mock(AmqpAdmin.class);
+        RabbitTemplate rabbitTemplate = mock(RabbitTemplate.class);
+        TopicExchange topicExchange = mock(TopicExchange.class);
+        pollService = new PollService(userRepo, pollRepo, optionRepo, voteRepo, pollCacheService, amqpAdmin, rabbitTemplate, topicExchange);
     }
 
     @Test

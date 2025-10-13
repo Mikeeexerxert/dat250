@@ -91,11 +91,12 @@ public class PollController {
     }
 
     // Vote endpoints
-
+    /**
     @GetMapping("/{pollId}/votes")
     public List<Vote> getVotesForPoll(@PathVariable Long pollId) {
         return pollService.getVotesForPoll(pollId);
     }
+     **/
 
     @PostMapping("/{pollId}/vote")
     public ResponseEntity<Vote> castVote(@PathVariable Long pollId, @RequestParam Long userId, @RequestParam Long optionId) {
